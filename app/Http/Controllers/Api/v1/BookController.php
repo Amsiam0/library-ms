@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\v1\IncreaseStockRequest;
 use App\Http\Requests\Api\v1\StoreBookRequest;
 use App\Http\Requests\Api\v1\UpdateBookRequest;
+use App\Http\Resources\BookListResource;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
 use App\Models\PhysicalStock;
@@ -52,7 +53,7 @@ class BookController extends Controller
 
             $books = $query->latest()->paginate(10);
 
-            return BookResource::collection($books);
+            return BookListResource::collection($books);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error retrieving books',
@@ -107,7 +108,26 @@ class BookController extends Controller
      */
     public function show(string $id)
     {
-        return new BookResource($book->load('category', 'physicalStock'));
+        try {
+            $book = Book::with(['category', 'physicalStock'])->find($id);
+
+            if (!$book) {
+                return response()->json([
+                    'message' => 'Book not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Book retrieved successfully',
+                'data' => new BookResource($book)
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error retrieving book',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
