@@ -13,7 +13,6 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('books', BookController::class);
         Route::post('books/{book}/stock', [BookController::class, 'stock'])->name('books.stock');
-
         Route::post('/book-loan-request', [BookController::class, 'requestBookLoan']);
         Route::get('/book-loans', [BookController::class, 'getBookLoans']);
         Route::put('/book-loans/{id}/request-due-date', [BookController::class, 'requestUpdateDueDate']);
