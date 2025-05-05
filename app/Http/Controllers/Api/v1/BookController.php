@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\v1\DeleteBookRequest;
 use App\Http\Requests\Api\v1\IncreaseStockRequest;
 use App\Http\Requests\Api\v1\StoreBookRequest;
 use App\Http\Requests\Api\v1\UpdateBookRequest;
@@ -13,6 +14,7 @@ use App\Models\PhysicalStock;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use App\Http\Requests\Api\v1\BookLoanRequest;
 use App\Http\Resources\BookLoanCollection;
@@ -139,41 +141,114 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, string $id)
     {
-        $this->authorize('update', $book);
+        try {
+            $book = Book::findOrFail($id);
 
-        $book->update($request->validated());
+            $validatedData = $request->validated();
 
-        return (new BookResource($book->fresh()))
-            ->response()
-            ->setStatusCode(200);
+            // Update book details
+            $book->update([
+                'title' => $validatedData['title'] ?? $book->title,
+                'author' => $validatedData['author'] ?? $book->author,
+                'description' => $validatedData['description'] ?? $book->description,
+                'category_id' => $validatedData['category_id'] ?? $book->category_id,
+                'ebook' => $validatedData['ebook'] ?? $book->ebook,
+            ]);
+
+            return response()->json([
+                'message' => 'Book updated successfully',
+                'data' => new BookResource($book->fresh(['category']))
+            ], ResponseAlias::HTTP_OK);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Book not found'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating book',
+                'error' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(DeleteBookRequest $request, string $id)
     {
-        $this->authorize('delete', $book);
+        try {
+            $book = Book::findOrFail($id);
 
-        $book->delete();
+            // Check if the book has any loans
+            if ($book->bookLoans()->exists()) {
+                return response()->json([
+                    'message' => 'Cannot delete book with active loans'
+                ], ResponseAlias::HTTP_FORBIDDEN);
+            }
 
-        return response()->json(
-            ['message' => 'Book deleted successfully'],
-            200
-        );
+            $book->delete();
+
+            return response()->json([
+                'message' => 'Book deleted successfully'
+            ], ResponseAlias::HTTP_OK);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Book not found'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting book',
+                'error' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public function increaseStock(IncreaseStockRequest $request, Book $book)
+    public function increaseStock(IncreaseStockRequest $request, String $id)
     {
-        $this->authorize('update', $book);
+        try {
+            $book = Book::findOrFail($id);
 
-        $stock = $book->physicalStock()->firstOrCreate(['book_id' => $book->id]);
-        $stock->increment('quantity', $request->quantity);
+            DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Stock increased successfully',
-            'new_quantity' => $stock->quantity
-        ], 200);
+            // If book didn't have physical copy before, enable it
+            if (!$book->has_physical) {
+                $book->update(['has_physical' => true]);
+            }
+
+            // Create or update physical stock
+            $physicalStock = PhysicalStock::updateOrCreate(
+                ['book_id' => $book->id],
+                [
+                    'quantity' => DB::raw('quantity + ' . $request->validated()['quantity'])
+                ]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Stock updated successfully',
+                'data' => [
+                    'current_stock' => $physicalStock->fresh()->quantity
+                ]
+            ], ResponseAlias::HTTP_OK);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Book not found'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error updating stock',
+                'error' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
     public function requestBookLoan(BookLoanRequest $request)
     {
