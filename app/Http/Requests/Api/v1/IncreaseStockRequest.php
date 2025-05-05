@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\v1;
 
+use App\Models\Book;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IncreaseStockRequest extends FormRequest
@@ -11,7 +12,7 @@ class IncreaseStockRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('update', Book::class);
     }
 
     /**

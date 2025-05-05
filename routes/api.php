@@ -12,6 +12,6 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('books', BookController::class);
-        Route::post('books/{book}/stock', [BookController::class, 'stock'])->name('books.stock');
+        Route::put('books/{book}/stock', [BookController::class, 'increaseStock'])->name('books.stock');
     });
 });
