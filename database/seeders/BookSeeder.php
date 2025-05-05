@@ -17,5 +17,12 @@ class BookSeeder extends Seeder
         Book::factory(20)
             ->recycle(Category::all())
             ->create();
+
+        // Create 20 books with pdf
+        Book::factory(20)
+            ->recycle(Category::all())
+            ->create([
+                'ebook' => 'https://example.com/sample.pdf',
+            ]);
     }
 }

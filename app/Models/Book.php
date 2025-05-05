@@ -15,7 +15,7 @@ class Book extends Model
         'author',
         'description',
         'category_id',
-        'has_pdf',
+        'ebook',
         'has_physical'
     ];
 

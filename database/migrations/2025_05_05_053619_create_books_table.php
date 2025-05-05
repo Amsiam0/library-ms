@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('author');
             $table->text('description');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->boolean('has_pdf')->default(false);
+            $table->text('ebook')->nullable();
             $table->boolean('has_physical')->default(false);
             $table->timestamps();
         });
