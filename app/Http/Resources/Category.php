@@ -17,6 +17,8 @@ class Category extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'bookCount' => $this->when(isset($this->books_count), $this->books_count),
+            'createdAt' => $this->created_at
         ];
     }
 }

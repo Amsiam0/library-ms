@@ -11,6 +11,9 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
 
 
     Route::middleware('auth:sanctum')->group(function () {
+
+        Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
         Route::apiResource('books', BookController::class);
         Route::post('books/{book}/stock', [BookController::class, 'stock'])->name('books.stock');
         Route::post('/book-loan-request', [BookController::class, 'requestBookLoan']);

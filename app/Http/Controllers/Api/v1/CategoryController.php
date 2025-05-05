@@ -19,11 +19,13 @@ class CategoryController extends Controller
         $perPage = request()->get('per_page', 10);
         $search = request()->get('search', null);
 
-        $categories = Category::query()
+        $categories = Category::latest()
             ->when($search, function ($query) use ($search) {
                 return $query->where('name', 'like', "%{$search}%");
             })
+            ->withCount('books')
             ->paginate($perPage);
+
         return CategoryResource::collection($categories);
     }
 
