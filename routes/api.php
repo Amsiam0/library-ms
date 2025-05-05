@@ -2,23 +2,27 @@
 
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\BookController;
+use App\Http\Controllers\Api\v1\CategoryController;
+use App\Http\Controllers\Api\v1\FeedbackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\v1\CategoryController;
 
 Route::name('api.v1.')->prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
 
-
     Route::middleware('auth:sanctum')->group(function () {
-
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
         Route::apiResource('books', BookController::class);
         Route::put('books/{book}/stock', [BookController::class, 'increaseStock'])->name('books.stock');
-        Route::post('/book-loan-request', [BookController::class, 'requestBookLoan']);
+        Route::post('/book-loans', [BookController::class, 'requestBookLoan']);
         Route::get('/book-loans', [BookController::class, 'getBookLoans']);
         Route::put('/book-loans/{id}/request-due-date', [BookController::class, 'requestUpdateDueDate']);
         Route::resource('categories', CategoryController::class);
+
+
+        // Feedback routes
+        Route::get('/feedback/latest', [FeedbackController::class, 'getLatestFeedback']);
+        Route::post('/books/{book}/feedback', [FeedbackController::class, 'store']);
     });
 });

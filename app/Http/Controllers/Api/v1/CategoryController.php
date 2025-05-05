@@ -17,6 +17,11 @@ class CategoryController extends Controller
     public function index()
     {
         $perPage = request()->get('per_page', 10);
+
+        $perPage = is_numeric($perPage) ? (int)$perPage : 10;
+        $perPage = $perPage > 100 ? 100 : $perPage;
+        $perPage = $perPage < 1 ? 1 : $perPage;
+
         $search = request()->get('search', null);
 
         $categories = Category::latest()
@@ -76,6 +81,10 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return response()->noContent();
+        return response()->json(
+            [
+                'message' => 'Category deleted successfully',
+            ]
+        );
     }
 }
