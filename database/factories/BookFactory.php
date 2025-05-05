@@ -22,7 +22,7 @@ class BookFactory extends Factory
             'author'       => fake()->name(),
             'description'  => fake()->paragraph(),
             'category_id'  => Category::factory(),
-            'has_pdf'      => fake()->boolean(),
+            'ebook'        => fake()->filePath(),
             'has_physical' => fake()->boolean(),
         ];
     }

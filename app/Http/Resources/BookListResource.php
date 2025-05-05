@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class BookResource extends JsonResource
+class BookListResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,13 +18,9 @@ class BookResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'author' => $this->author,
-            'description' => $this->description,
             'ebook' => $this->ebook ?? '',
             'hasPhysical' => $this->has_physical,
-            'quantity' => $this->whenLoaded('physicalStock', fn () => $this->physicalStock->quantity),
             'category' => $this->whenLoaded('category', fn () => $this->category->name),
-            'createdAt' => $this->created_at->toDateTimeString(),
         ];
-
     }
 }
