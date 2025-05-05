@@ -25,5 +25,6 @@ class BookResource extends JsonResource
             'category' => $this->whenLoaded('category', fn () => $this->category->name),
             'createdAt' => $this->created_at->toDateTimeString(),
         ];
+
     }
 }
