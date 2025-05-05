@@ -19,4 +19,15 @@ class BookLoan extends Model
         'due_date',
         'returned_at',
     ];
+    protected $casts = [
+        'requested_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'due_date' => 'datetime',
+        'returned_at' => 'datetime',
+    ];
+
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    }
 }
