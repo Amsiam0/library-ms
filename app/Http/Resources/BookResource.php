@@ -23,7 +23,7 @@ class BookResource extends JsonResource
             'hasPhysical' => $this->has_physical,
             'quantity' => $this->whenLoaded('physicalStock', fn () => $this->physicalStock->quantity),
             'category' => $this->whenLoaded('category', fn () => $this->category->name),
-            'createdAt' => $this->created_at->toDateTimeString(),
+            'createdAt' => $this->created_at?->toDateTimeString(),
         ];
 
     }
