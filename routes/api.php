@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\v1\BookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\v1\CategoryController;
+use App\Http\Controllers\Api\v1\FeedbackController;
 
 Route::name('api.v1.')->prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
