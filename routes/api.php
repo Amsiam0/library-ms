@@ -38,6 +38,7 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
             Route::put('/{id}/reject', [BookLoanController::class, 'reject'])->name('book-loans.reject');
             Route::put('/{id}/distribute', [BookLoanController::class, 'distribute'])->name('book-loans.distribute');
             Route::put('/{id}/action-due-date-request/{status}', [BookLoanController::class, 'actionDueDateRequest'])->name('book-loans.action-due-date-request');
+            Route::put('/{id}/return', [BookLoanController::class, 'returnBook'])->name('book-loans.return');
         });
 
         // Feedback routes
