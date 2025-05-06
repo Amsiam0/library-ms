@@ -39,4 +39,11 @@ class FeedbackController extends Controller
 
         return  FeedbackResource::collection($feedback);
     }
+
+    public function getBookFeedback(string $bookId)
+    {
+        $feedback = Feedback::where('book_id', $bookId)->latest()->paginate(10);
+
+        return  FeedbackResource::collection($feedback);
+    }
 }

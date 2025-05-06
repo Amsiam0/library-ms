@@ -113,7 +113,16 @@ class BookController extends Controller
     public function show(string $id)
     {
         try {
-            $book = Book::with(['category', 'physicalStock'])->find($id);
+            $book = Book::with([
+                'category',
+                'physicalStock',
+                'bookLoans' => fn($q) => $q->where('status', 'approved')
+                    ->select('id', 'user_id', 'book_id', 'due_date'),
+                'bookLoans.user' => fn($q) => $q->select('id', 'name', 'email')
+
+            ])
+                ->find($id);
+
 
             if (!$book) {
                 return response()->json([
