@@ -179,4 +179,29 @@ class BookLoanController extends Controller
         }
     }
 
+    public function returnBook(string $id)
+    {
+        try {
+            $bookLoan = BookLoan::findOrFail($id);
+
+            if ($bookLoan->status !== 'approved') {
+                return response()->json(['message' => 'Only approved book loans can be returned.'], 422);
+            }
+
+            $bookLoan->update([
+                'status' => 'returned',
+                'returned_at' => now(),
+            ]);
+
+            // Increase the physical stock of the book
+            $bookLoan->book->physicalStock->increment('quantity');
+
+            return response()->json(['message' => 'Book has been returned.'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Book loan not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error returning book', 'error' => $e->getMessage()], 500);
+        }
+    }
+
 }
