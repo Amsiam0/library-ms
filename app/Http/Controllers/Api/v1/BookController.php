@@ -124,7 +124,7 @@ class BookController extends Controller
                 'category',
                 'physicalStock',
                 'bookLoans' => fn($q) => $q->where('status', 'approved')
-                    ->select('id', 'user_id', 'book_id', 'due_date'),
+                    ->select('id', 'user_id', 'book_id', 'due_date')->orderBy('due_date', 'asc')->limit(3),
                 'bookLoans.user' => fn($q) => $q->select('id', 'name', 'email')
 
             ])
