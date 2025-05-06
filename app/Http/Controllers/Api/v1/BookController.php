@@ -158,7 +158,7 @@ class BookController extends Controller
                 'author' => $validatedData['author'] ?? $book->author,
                 'description' => $validatedData['description'] ?? $book->description,
                 'category_id' => $validatedData['category_id'] ?? $book->category_id,
-                'ebook' => $validatedData['ebook'] ?? $book->ebook,
+                'ebook' => $validatedData['ebook'],
             ]);
 
             return response()->json([
@@ -273,7 +273,12 @@ class BookController extends Controller
         $status = $request?->status;
         $search = $request?->search;
 
-        $bookLoans = BookLoan::latest()->where('user_id', Auth::user()?->id)
+        $bookLoans = BookLoan::latest()
+            ->when(Auth::user()->role === 'admin', function ($query) {
+                return $query->with(['user:id,name,email']);
+            })->when(Auth::user()->role === 'user', function ($query) {
+                return $query->where('user_id', Auth::user()->id);
+            })
             ->with(['book:id,title,author'])
             ->when($status, function ($query) use ($status) {
                 return $query->where('status', $status);
