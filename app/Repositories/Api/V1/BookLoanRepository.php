@@ -25,8 +25,8 @@ class BookLoanRepository
             ->when(Auth::user()->role === 'admin', fn($query) => $query->with(['user:id,name,email']))
             ->when(Auth::user()->role === 'user', fn($query) => $query->where('user_id', Auth::user()->id))
             ->with(['book:id,title,author'])
-            ->when(Auth::user()->role === 'admin' && $status, fn($query) => $query->where('status', $status))
-            ->when(Auth::user()->role === 'admin' && $due_date, fn($query) => $this->applyDueDateFilter($query, $due_date))
+            ->when($status, fn($query) => $query->where('status', $status))
+            ->when($due_date, fn($query) => $this->applyDueDateFilter($query, $due_date))
             ->when($search, fn($query) => $query->whereHas('book', fn($q) => $q->where('title', 'like', "%{$search}%")->orWhere('author', 'like', "%{$search}%")))
             ->paginate($per_page);
     }
@@ -36,6 +36,8 @@ class BookLoanRepository
         $per_page = $this->sanitizePerPage($request->get('per_page', 10));
         $status = $request->status;
         $search = $request->search;
+
+
 
         return DueDateIncrease::with('user', 'bookLoan', 'bookLoan.book:id,title,author')
             ->latest()
