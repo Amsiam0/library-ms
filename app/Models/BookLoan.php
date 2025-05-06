@@ -31,6 +31,11 @@ class BookLoan extends Model
         return $this->belongsTo(Book::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function dueDateIncreases()
     {
         return $this->hasMany(DueDateIncrease::class);

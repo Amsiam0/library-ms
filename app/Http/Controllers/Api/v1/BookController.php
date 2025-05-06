@@ -54,7 +54,7 @@ class BookController extends Controller
 
             // Filter by stock availability
             if ($request->boolean('available')) {
-                $query->whereHas('physicalStock', fn ($q) => $q->where('quantity', '>', 0));
+                $query->whereHas('physicalStock', fn($q) => $q->where('quantity', '>', 0));
             }
 
             $books = $query->latest()->paginate(10);
@@ -99,8 +99,6 @@ class BookController extends Controller
                 'message' => 'Book created successfully',
                 'data' => new BookResource($book->load('physicalStock'))
             ], 201);
-
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error creating book',
@@ -115,7 +113,16 @@ class BookController extends Controller
     public function show(string $id)
     {
         try {
-            $book = Book::with(['category', 'physicalStock'])->find($id);
+            $book = Book::with([
+                'category',
+                'physicalStock',
+                'bookLoans' => fn($q) => $q->where('status', 'approved')
+                    ->select('id', 'user_id', 'book_id', 'due_date'),
+                'bookLoans.user' => fn($q) => $q->select('id', 'name', 'email')
+
+            ])
+                ->find($id);
+
 
             if (!$book) {
                 return response()->json([
@@ -127,7 +134,6 @@ class BookController extends Controller
                 'message' => 'Book retrieved successfully',
                 'data' => new BookResource($book)
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error retrieving book',
@@ -159,12 +165,10 @@ class BookController extends Controller
                 'message' => 'Book updated successfully',
                 'data' => new BookResource($book->fresh(['category']))
             ], ResponseAlias::HTTP_OK);
-
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Book not found'
             ], ResponseAlias::HTTP_NOT_FOUND);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error updating book',
@@ -193,12 +197,10 @@ class BookController extends Controller
             return response()->json([
                 'message' => 'Book deleted successfully'
             ], ResponseAlias::HTTP_OK);
-
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Book not found'
             ], ResponseAlias::HTTP_NOT_FOUND);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error deleting book',
@@ -235,12 +237,10 @@ class BookController extends Controller
                     'current_stock' => $physicalStock->fresh()->quantity
                 ]
             ], ResponseAlias::HTTP_OK);
-
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Book not found'
             ], ResponseAlias::HTTP_NOT_FOUND);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
