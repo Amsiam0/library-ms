@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\v1\BookLoanRequest;
 use App\Http\Requests\Api\v1\RequestUpdateDueDateRequest;
 use App\Http\Resources\BookLoanCollection;
+use App\Http\Resources\BookLoanResource;
 use App\Http\Resources\DueDateIncreaseResource;
 use App\Repositories\Api\V1\BookLoanRepository;
 use App\Services\Api\V1\BookLoanService;
@@ -20,14 +21,13 @@ class BookLoanController extends Controller
         private readonly BookLoanRepository $bookLoanRepository
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         try {
             $bookLoans = $this->bookLoanRepository->getFilteredBookLoans($request);
-            return response()->json([
-                'message' => 'Book loans retrieved successfully',
-                'data' => new BookLoanCollection($bookLoans)
-            ], Response::HTTP_OK);
+
+
+            return BookLoanResource::collection($bookLoans);
         } catch (\Exception $e) {
             return response()->json(["message" => $e->getMessage()], $e->getCode());
         }
@@ -108,14 +108,11 @@ class BookLoanController extends Controller
         }
     }
 
-    public function updateDueDateRequestList(Request $request): JsonResponse
+    public function updateDueDateRequestList(Request $request)
     {
         try {
             $dueDateIncreases = $this->bookLoanRepository->getFilteredDueDateIncreases($request);
-            return response()->json([
-                'message' => 'Due date increase requests retrieved successfully',
-                'data' => DueDateIncreaseResource::collection($dueDateIncreases)
-            ], Response::HTTP_OK);
+            return DueDateIncreaseResource::collection($dueDateIncreases);
         } catch (\Exception $e) {
 
             return response()->json(["message" => $e->getMessage()], $e->getCode());

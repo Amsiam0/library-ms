@@ -14,7 +14,7 @@ class BookLoanRepository
 {
     use PaginationTrait;
 
-    public function getFilteredBookLoans(Request $request): LengthAwarePaginator
+    public function getFilteredBookLoans(Request $request)
     {
         $per_page = $this->sanitizePerPage($request->get('per_page', 10));
         $status = $request->status;
