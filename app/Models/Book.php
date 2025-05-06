@@ -16,7 +16,8 @@ class Book extends Model
         'description',
         'category_id',
         'ebook',
-        'has_physical'
+        'has_physical',
+        'thumbnail'
     ];
 
     public function category()

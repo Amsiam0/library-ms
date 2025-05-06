@@ -11,15 +11,9 @@ use App\Http\Resources\BookListResource;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
 use App\Models\PhysicalStock;
-use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
-use App\Http\Requests\Api\v1\BookLoanRequest;
-use App\Http\Resources\BookLoanCollection;
-use App\Models\BookLoan;
-use App\Http\Requests\Api\v1\RequestUpdateDueDateRequest;
 
 class BookController extends Controller
 {
@@ -33,7 +27,7 @@ class BookController extends Controller
     {
         try {
             $query = Book::with('category', 'physicalStock')
-            ->withCount(['bookLoans as total_loans' => function ($query) {;
+                ->withCount(['bookLoans as total_loans' => function ($query) {;
                     $query->where('status', 'approved');
                 }]);
 
@@ -172,7 +166,7 @@ class BookController extends Controller
                 'description' => $validatedData['description'] ?? $book->description,
                 'category_id' => $validatedData['category_id'] ?? $book->category_id,
                 'ebook' => $validatedData['ebook'],
-                'thumbnail' => $validatedData['thumbnail']?? '',
+                'thumbnail' => $validatedData['thumbnail'] ?? '',
             ]);
 
             return response()->json([
