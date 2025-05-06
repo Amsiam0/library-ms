@@ -88,7 +88,7 @@ class BookLoanController extends Controller
             SendLoanApprovalMail::dispatch($bookLoan);
 
             return response()->json([
-                'message' => 'Loan request approved successfully'
+                'message' => 'Your book is ready for collection, please collect as soon as possible.',
             ], 200);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -105,9 +105,11 @@ class BookLoanController extends Controller
         }
     }
 
-    public function reject(BookLoan $bookLoan)
+    public function reject(string $id)
     {
+
         try {
+            $bookLoan = BookLoan::with(['book.physicalStock'])->findOrFail($id);
             if ($bookLoan->status !== 'pending') {
                 return response()->json(['message' => 'Only pending requests can be rejected.'], 422);
             }
@@ -124,12 +126,13 @@ class BookLoanController extends Controller
         }
     }
 
-    public function distribute(BookLoan $bookLoan)
+    public function distribute(string $id)
     {
 
         try {
-            if ($bookLoan->status !== 'approved') {
-                return response()->json(['message' => 'Only approved loans can be marked as returned.'], 422);
+            $bookLoan = BookLoan::with(['book.physicalStock'])->findOrFail($id);
+            if ($bookLoan->status !== 'pre-approved') {
+                return response()->json(['message' => 'Only approved book can be distributed'], 422);
             }
 
             $bookLoan->update([
@@ -137,8 +140,8 @@ class BookLoanController extends Controller
                 'due_date' => now()->addDays(7),
             ]);
 
-            // Increase stock back after return
-            $bookLoan->book->physicalStock->increment('quantity');
+            // Decrease the physical stock of the book
+            $bookLoan->book->physicalStock->decrement('quantity');
 
             return response()->json(['message' => 'Book has been distributed.'], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {

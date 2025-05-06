@@ -152,7 +152,7 @@ class BookController extends Controller
                 'author' => $validatedData['author'] ?? $book->author,
                 'description' => $validatedData['description'] ?? $book->description,
                 'category_id' => $validatedData['category_id'] ?? $book->category_id,
-                'ebook' => $validatedData['ebook'] ?? $book->ebook,
+                'ebook' => $validatedData['ebook'],
             ]);
 
             return response()->json([
