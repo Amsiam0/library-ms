@@ -32,7 +32,10 @@ class BookController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Book::with('category', 'physicalStock');
+            $query = Book::with('category', 'physicalStock')
+            ->withCount(['bookLoans as total_loans' => function ($query) {;
+                    $query->where('status', 'approved');
+                }]);
 
             // Filter by category
             if ($request->filled('category_id')) {
