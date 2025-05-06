@@ -3,7 +3,9 @@
 namespace App\Repositories\Api\V1;
 
 use App\Models\Book;
+use App\Models\BookLoan;
 use App\Models\PhysicalStock;
+use App\Models\User;
 use App\Traits\Api\V1\PaginationTrait;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -51,6 +53,35 @@ class BookRepository
         }
 
         return $query->latest()->paginate($perPage);
+    }
+
+    public function getDashboardStats()
+    {
+        return [
+            'total_books' => Book::count(),
+            'physical_books' => Book::where('has_physical', true)->count(),
+            'ebooks' => Book::whereNotNull('ebook')->count(),
+            'active_loans' => BookLoan::where('status', 'approved')
+                ->whereNull('returned_at')
+                ->count(),
+            'total_users' => User::where('role', 'user')->count(),
+            'top_borrowed_books' => Book::withCount(['bookLoans' => function($query) {
+                $query->where('status', 'approved');
+            }])
+                ->having('book_loans_count', '>', 0)
+                ->orderByDesc('book_loans_count')
+                ->limit(5)
+                ->get(['id', 'title', 'author', 'thumbnail'])
+                ->map(function($book) {
+                    return [
+                        'id' => $book->id,
+                        'title' => $book->title,
+                        'author' => $book->author,
+                        'thumbnail' => $book->thumbnail,
+                        'total_borrows' => $book->book_loans_count
+                    ];
+                })
+        ];
     }
 
     public function find(string $id): ?Book
