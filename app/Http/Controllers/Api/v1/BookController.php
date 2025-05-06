@@ -160,7 +160,7 @@ class BookController extends Controller
                 'description' => $validatedData['description'] ?? $book->description,
                 'category_id' => $validatedData['category_id'] ?? $book->category_id,
                 'ebook' => $validatedData['ebook'],
-                'thumbnail' => $validatedData['thumbnail'],
+                'thumbnail' => $validatedData['thumbnail']?? '',
             ]);
 
             return response()->json([
