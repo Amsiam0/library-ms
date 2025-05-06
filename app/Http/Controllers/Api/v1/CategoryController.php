@@ -5,86 +5,96 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\v1\CategoryRequest;
 use App\Http\Resources\Category as CategoryResource;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Repositories\Api\V1\CategoryRepository;
+use App\Services\Api\V1\CategoryService;
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly CategoryRepository $categoryRepository
+    ) {}
+
+    public function index(): JsonResponse
     {
-        $perPage = request()->get('per_page', 10);
-
-        $perPage = is_numeric($perPage) ? (int)$perPage : 10;
-        $perPage = $perPage > 100 ? 100 : $perPage;
-        $perPage = $perPage < 1 ? 1 : $perPage;
-
-        $search = request()->get('search', null);
-
-        $categories = Category::latest()
-            ->when($search, function ($query) use ($search) {
-                return $query->where('name', 'like', "%{$search}%");
-            })
-            ->withCount('books')
-            ->paginate($perPage);
-
-        return CategoryResource::collection($categories);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(CategoryRequest $request)
-    {
-        $category = Category::create($request->validated());
-
-        return new CategoryResource($category);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
-    {
-        return new CategoryResource($category);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(CategoryRequest $request, Category $category)
-    {
-        $category->update($request->validated());
-
-        return new CategoryResource($category);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Category $category)
-    {
-        if (!(Auth::check() && Auth::user()->role === 'admin')) {
+        try {
+            $categories = $this->categoryRepository->getFilteredCategories(request());
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'You are not authorized to delete this category.',
-            ], 403);
+                'message' => $e->getMessage()
+            ], $e->getCode());
         }
-        // Check if the category is used in any book
-        if ($category->books()->exists()) {
+        return CategoryResource::collection($categories)->response();
+    }
+
+    public function store(CategoryRequest $request): JsonResponse
+    {
+        try {
+            $category = $this->categoryService->createCategory($request->validated());
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Category cannot be deleted because it is associated with books.',
-            ], 422);
+                'message' => $e->getMessage()
+            ], $e->getCode());
+        }
+        return response()->json([
+            'message' => 'Category created successfully',
+            'data' => new CategoryResource($category)
+        ], Response::HTTP_CREATED);
+    }
+
+    public function show(string $id): JsonResponse
+    {
+        try {
+            $category = $this->categoryRepository->find($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], $e->getCode());
         }
 
-        $category->delete();
+        if (!$category) {
+            return response()->json([
+                'message' => 'Category not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
 
-        return response()->json(
-            [
-                'message' => 'Category deleted successfully',
-            ]
-        );
+        return response()->json([
+            'message' => 'Category retrieved successfully',
+            'data' => new CategoryResource($category)
+        ], Response::HTTP_OK);
+    }
+
+    public function update(CategoryRequest $request, string $id): JsonResponse
+    {
+        try {
+            $category = $this->categoryService->updateCategory($id, $request->validated());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], $e->getCode());
+        }
+
+        return response()->json([
+            'message' => 'Category updated successfully',
+            'data' => new CategoryResource($category)
+        ], Response::HTTP_OK);
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+
+        try {
+            $this->categoryService->deleteCategory($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], $e->getCode());
+        }
+
+        return response()->json([
+            'message' => 'Category deleted successfully'
+        ], Response::HTTP_OK);
     }
 }

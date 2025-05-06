@@ -26,6 +26,7 @@ class RequestUpdateDueDateRequest extends CustomFormRequest
         return [
             'dueDate' => 'required|date_format:Y-m-d',
             'reason' => 'required|string|max:255',
+            'due_date' => 'required|date_format:Y-m-d',
         ];
     }
 

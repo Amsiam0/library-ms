@@ -5,45 +5,49 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\v1\FeedbackRequest;
 use App\Http\Resources\Feedback as FeedbackResource;
-use App\Http\Resources\FeedbackCollection;
-use App\Models\Book;
-use App\Models\Feedback;
-use Illuminate\Support\Facades\Auth;
+use App\Repositories\Api\V1\FeedbackRepository;
+use App\Services\Api\V1\FeedbackService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 
 class FeedbackController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(FeedbackRequest $request, string $bookId)
+    public function __construct(
+        private readonly FeedbackService $feedbackService,
+        private readonly FeedbackRepository $feedbackRepository
+    ) {}
+
+    public function store(FeedbackRequest $request, string $bookId): JsonResponse
     {
-        $validatedData = $request->validated();
+        try {
+            $feedback = $this->feedbackService->createFeedback($bookId, $request->validated());
+        } catch (\Exception $e) {
+            return response()->json(["message" => $e->getMessage()], $e->getCode());
+        }
 
-
-        $book = Book::findOrFail($bookId);
-
-        $feedback = Feedback::create([
-            'book_id' => $book->id,
-            'user_id' => Auth::id(),
-            'rating' => $validatedData['rating'],
-            'review' => $validatedData['comment'],
-            'submitted_at' => now(),
-        ]);
-
-        return new FeedbackResource($feedback);
+        return response()->json([
+            'message' => 'Feedback created successfully',
+            'data' => new FeedbackResource($feedback)
+        ], Response::HTTP_CREATED);
     }
 
-    public function getLatestFeedback()
+    public function getLatestFeedback(): JsonResponse
     {
-        $feedback = Feedback::latest()->with('book', 'user')->take(10)->get();
-
-        return  FeedbackResource::collection($feedback);
+        $feedback = $this->feedbackRepository->getLatestFeedback();
+        return response()->json([
+            'message' => 'Latest feedback retrieved successfully',
+            'data' => FeedbackResource::collection($feedback)
+        ], Response::HTTP_OK);
     }
 
-    public function getBookFeedback(string $bookId)
+    public function getBookFeedback(Request $request, string $bookId): JsonResponse
     {
-        $feedback = Feedback::with('user')->where('book_id', $bookId)->latest()->paginate(10);
-
-        return  FeedbackResource::collection($feedback);
+        $feedback = $this->feedbackRepository->getBookFeedback($request, $bookId);
+        return response()->json([
+            'message' => 'Book feedback retrieved successfully',
+            'data' => FeedbackResource::collection($feedback)
+        ], Response::HTTP_OK);
     }
 }
