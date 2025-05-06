@@ -36,6 +36,12 @@ class BookController extends Controller
                 $query->where('category_id', $request->input('category_id'));
             }
 
+            // Search by title
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where('title', 'like', "%{$search}%");
+            }
+
             // Filter by format (ebook, physical, or both)
             if ($request->filled('format')) {
                 switch ($request->input('format')) {
