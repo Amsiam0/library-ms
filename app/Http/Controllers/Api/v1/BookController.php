@@ -83,6 +83,7 @@ class BookController extends Controller
                 'description' => $validatedData['description'] ?? null,
                 'category_id' => $validatedData['category_id'],
                 'has_physical' => $validatedData['has_physical'],
+                'thumbnail' => $validatedData['thumbnail'] ?? null,
                 'ebook' => $validatedData['ebook'] ?? null,
             ]);
 
@@ -159,6 +160,7 @@ class BookController extends Controller
                 'description' => $validatedData['description'] ?? $book->description,
                 'category_id' => $validatedData['category_id'] ?? $book->category_id,
                 'ebook' => $validatedData['ebook'],
+                'thumbnail' => $validatedData['thumbnail'],
             ]);
 
             return response()->json([

@@ -20,6 +20,7 @@ class BookListResource extends JsonResource
             'author' => $this->author,
             'ebook' => $this->ebook ?? '',
             'hasPhysical' => $this->has_physical,
+            'thumbnail' => $this->thumbnail ?? '',
             'category' => $this->whenLoaded('category', fn () => $this->category->name),
         ];
     }

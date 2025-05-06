@@ -28,6 +28,7 @@ class UpdateBookRequest extends FormRequest
             'description' => 'nullable|string',
             'category_id' => 'sometimes|required|exists:categories,id',
             'ebook' => 'sometimes|nullable|string',
+            'thumbnail' => 'sometimes|nullable|string',
         ];
     }
 }
