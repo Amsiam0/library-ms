@@ -29,6 +29,7 @@ class StoreBookRequest extends FormRequest
             'category_id' => 'required|exists:categories,id',
             'ebook' => 'nullable|string',
             'has_physical' => 'required|boolean',
+            'thumbnail' => 'nullable|string',
             'quantity' => 'required_if:has_physical,true|integer|min:1',
         ];
     }
