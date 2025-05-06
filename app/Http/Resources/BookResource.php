@@ -21,8 +21,9 @@ class BookResource extends JsonResource
             'description' => $this->description,
             'ebook' => $this->ebook ?? '',
             'hasPhysical' => $this->has_physical,
+            'categoryId' => $this->category_id,
             'bookLoans' => $this->whenLoaded('bookLoans', fn() => BookLoanResource::collection($this->bookLoans)),
-            'quantity' => $this->whenLoaded('physicalStock', fn() => $this->physicalStock->quantity),
+            'quantity' => $this->whenLoaded('physicalStock', fn() => $this->physicalStock?->quantity ?? 0),
             'category' => $this->whenLoaded('category', fn() => $this->category->name),
             'createdAt' => $this->created_at?->toDateTimeString(),
         ];
