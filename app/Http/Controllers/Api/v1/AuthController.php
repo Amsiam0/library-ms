@@ -4,120 +4,81 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\v1\ChangePasswordRequest;
-use App\Http\Requests\Api\v1\LoginRequest;
 use App\Http\Requests\Api\v1\CreateUserRequest;
+use App\Http\Requests\Api\v1\LoginRequest;
 use App\Http\Resources\UserResource;
+use App\Repositories\Api\V1\AuthRepository;
+use App\Repositories\UserRepositoryInterface;
+use App\Services\Api\V1\AuthService as V1AuthService;
+use App\Services\AuthService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use App\Mail\UserCreated;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    public function login(LoginRequest $request)
+    public function __construct(
+        private readonly V1AuthService $authService,
+        private readonly AuthRepository $userRepository
+    ) {}
+
+    public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->validationData();
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], 401);
-        }
-
-        $user = Auth::user();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
+        $tokenData = $this->authService->login($request->validated());
         return response()->json([
-            'access_token' => $token,
+            'message' => 'Login successful',
+            'access_token' => $tokenData['token'],
             'token_type' => 'Bearer',
-            'user' => new UserResource($user)
-        ]);
+            'user' => new UserResource($tokenData['user'])
+        ], Response::HTTP_OK);
     }
 
-    public function logout()
+    public function logout(): JsonResponse
     {
-        Auth::user()->currentAccessToken()?->revoke();
+        $this->authService->logout();
         return response()->json([
-            'message' => 'Logged out successfully',
-        ]);
+            'message' => 'Logged out successfully'
+        ], Response::HTTP_OK);
     }
 
-    public function store(CreateUserRequest $request)
+    public function store(CreateUserRequest $request): JsonResponse
     {
-        $validatedData = $request->validated();
-
-        //random password generation
-
-        $validatedData['password'] = Str::random(10);
-        $hashedPassword = Hash::make($validatedData['password']);
-
-        $user = User::create([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'password' => $hashedPassword,
-            'role' => $validatedData['role'],
-        ]);
-
-        //send email with password
-        Mail::to($user->email)->send(new UserCreated($user, $validatedData['password']));
-
+        try {
+            $user = $this->authService->createUser($request->validated());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        }
         return response()->json([
             'message' => 'User created successfully',
-            'user' => new UserResource($user),
-        ], 201);
+            'user' => new UserResource($user)
+        ], Response::HTTP_CREATED);
     }
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        //admin only
-
-        if (!(Auth::check() && Auth::user()->role === 'admin')) {
+        try {
+            $users = $this->userRepository->getFilteredUsers($request);
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
+                'message' => $e->getMessage(),
+            ], $e->getCode());
         }
-
-        $perPage = $request->get('per_page', 10);
-        $perPage = is_numeric($perPage) ? (int)$perPage : 10;
-        $perPage = $perPage > 100 ? 100 : $perPage;
-        $perPage = $perPage < 1 ? 1 : $perPage;
-
-
-        $users = User::latest()
-            ->when($request->search, function ($query) use ($request) {
-                return $query->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%");
-            })
-            ->when($request->role, function ($query) use ($request) {
-                return $query->where('role', $request->role);
-            })
-
-            ->paginate(15);
-
-        return UserResource::collection($users);
+        return UserResource::collection($users)->response();
     }
 
-    public function changePassword(ChangePasswordRequest $request)
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
-        $user = Auth::user();
-
-        if (!Hash::check($request->old_password, $user->password)) {
+        try {
+            $this->authService->changePassword($request->validated());
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Invalid old password',
-                'errors' => [
-                    'old_password' => ['The provided password does not match your current password.'],
-                ],
-            ], 422);
+                'message' => $e->getMessage(),
+            ], $e->getCode());
         }
-
-        $user->password = Hash::make($request->new_password);
-        $user->save();
-
         return response()->json([
-            'message' => 'Password changed successfully',
-        ]);
+            'message' => 'Password changed successfully'
+        ], Response::HTTP_OK);
     }
 }
