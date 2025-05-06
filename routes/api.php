@@ -25,16 +25,19 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
         Route::apiResource('books', BookController::class);
         Route::put('books/{book}/stock', [BookController::class, 'increaseStock'])->name('books.stock');
 
-        Route::post('/book-loan-request', [BookController::class, 'requestBookLoan']);
-        Route::get('/book-loans', [BookLoanController::class, 'index']);
-        Route::put('/book-loans/{id}/request-due-date', [BookController::class, 'requestUpdateDueDate']);
         Route::resource('categories', CategoryController::class);
 
-        Route::group(['prefix' => 'book-loans', 'middleware'=> [AdminMiddleware::class]], function () {
+
+
+        Route::post('/book-loan-request', [BookLoanController::class, 'requestBookLoan']);
+        Route::get('/book-loans', [BookLoanController::class, 'index']);
+        Route::put('/book-loans/{id}/request-due-date', [BookLoanController::class, 'requestUpdateDueDate']);
+        Route::group(['prefix' => 'book-loans', 'middleware' => [AdminMiddleware::class]], function () {
+            Route::get('due-date-increase-requests', [BookLoanController::class, 'updateDueDateRequestList'])->name('book-loans.due-date-increase-requests');
             Route::put('/{id}/approve', [BookLoanController::class, 'approve'])->name('book-loans.approve');
             Route::put('/{id}/reject', [BookLoanController::class, 'reject'])->name('book-loans.reject');
             Route::put('/{id}/distribute', [BookLoanController::class, 'distribute'])->name('book-loans.distribute');
-            Route::put('/{id}/update-return-date', [BookLoanController::class, 'updateReturnDate'])->name('book-loans.update-return-date');
+            Route::put('/{id}/action-due-date-request/{status}', [BookLoanController::class, 'actionDueDateRequest'])->name('book-loans.action-due-date-request');
             Route::put('/{id}/return', [BookLoanController::class, 'returnBook'])->name('book-loans.return');
         });
 
