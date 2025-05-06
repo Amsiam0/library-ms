@@ -7,6 +7,7 @@ use App\Models\PhysicalStock;
 use App\Traits\Api\V1\PaginationTrait;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class BookRepository
 {
@@ -103,7 +104,7 @@ class BookRepository
     {
         return PhysicalStock::updateOrCreate(
             ['book_id' => $book->id],
-            ['quantity' => \DB::raw('quantity + ' . $quantity)]
+            ['quantity' => DB::raw('quantity + ' . $quantity)]
         );
     }
 }
