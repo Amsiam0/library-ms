@@ -57,7 +57,7 @@ class BookLoanRepository
 
     public function findDueDateIncrease(string $id): ?DueDateIncrease
     {
-        return DueDateIncrease::where('status', 'pending')->find($id);
+        return DueDateIncrease::with('user', 'bookLoan')->where('status', 'pending')->find($id);
     }
 
     public function create(array $data): BookLoan

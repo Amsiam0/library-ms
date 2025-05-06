@@ -5,11 +5,13 @@ namespace App\Services\Api\V1;
 use App\Jobs\Api\v1\SendDueDateUpdateMail;
 use App\Jobs\Api\v1\SendLoanApprovalMail;
 use App\Jobs\Api\v1\SendLoanRejectionMail;
+use App\Mail\DueDateIncreaseNotification;
 use App\Repositories\Api\V1\BookLoanRepository;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response;
 
 class BookLoanService
@@ -158,7 +160,8 @@ class BookLoanService
             ]);
         }
 
-        SendDueDateUpdateMail::dispatch($dueDateIncrease, $status);
+
+        Mail::to($dueDateIncrease->user->email)->send(new DueDateIncreaseNotification($dueDateIncrease, $status));
     }
 
     public function returnBook(string $id): void
