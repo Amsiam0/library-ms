@@ -107,9 +107,10 @@ class BookRepository
 
     public function updateOrCreatePhysicalStock(Book $book, int $quantity): PhysicalStock
     {
+        // replace the existing stock with the new quantity & quantity must be greater than 0
         return PhysicalStock::updateOrCreate(
             ['book_id' => $book->id],
-            ['quantity' => DB::raw('quantity + ' . $quantity)]
+            ['quantity' => $quantity]
         );
     }
 }
