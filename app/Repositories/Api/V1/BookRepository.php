@@ -17,10 +17,15 @@ class BookRepository
     {
         $perPage = $this->sanitizePerPage($request->get('per_page', 10));
 
-        $query = Book::with('category', 'physicalStock')
-            ->withCount(['bookLoans as total_loans' => function ($query) {
-                $query->where('status', 'approved');
-            }]);
+        $query = Book::with([
+            'category',
+            'physicalStock',
+            'bookLoans' => fn($q) => $q->where('status', 'approved')
+                ->select('id', 'user_id', 'book_id', 'due_date')
+                ->orderBy('due_date', 'asc')
+                ->limit(3),
+            'bookLoans.user' => fn($q) => $q->select('id', 'name', 'email')
+        ])->withCount(['bookLoans as total_loans' => fn($q) => $q->where('status', 'approved')]);
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->input('category_id'));
