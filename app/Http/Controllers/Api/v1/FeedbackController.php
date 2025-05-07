@@ -42,12 +42,9 @@ class FeedbackController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function getBookFeedback(Request $request, string $bookId): JsonResponse
+    public function getBookFeedback(Request $request, string $bookId)
     {
         $feedback = $this->feedbackRepository->getBookFeedback($request, $bookId);
-        return response()->json([
-            'message' => 'Book feedback retrieved successfully',
-            'data' => FeedbackResource::collection($feedback)
-        ], Response::HTTP_OK);
+        return FeedbackResource::collection($feedback);
     }
 }

@@ -47,7 +47,6 @@ class BookLoanRepository
             $query->whereHas('bookLoan.book', fn($q) =>
             $q->where('title', 'like', "%{$search}%")->orWhere('author', 'like', "%{$search}%"))
                 ->orWhereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")))
-
             ->paginate($per_page);
     }
 
