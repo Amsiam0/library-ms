@@ -45,7 +45,7 @@ class DashboardRepository
                 'title' => $book->title,
                 'author' => $book->author,
                 'thumbnail' => $book->thumbnail,
-                'total_borrows' => $book->book_loans_count
+                'totalBorrows' => $book->book_loans_count
             ]);
 
         $counts = collect($books)->pluck('total_borrows');
