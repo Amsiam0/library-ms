@@ -90,10 +90,11 @@ class DashboardRepository
     {
         return collect(range(0, 6))
             ->map(function ($days) use ($lastSevenDays) {
-                $date = now()->subDays($days)->format('d M');
+                $date = now()->subDays($days);
+                $rawDate = $date->format('Y-m-d');
                 return [
-                    'date' => $date,
-                    'count' => $lastSevenDays[$date] ?? 0
+                    'date' => $date->format('d M'),
+                    'count' => $lastSevenDays[$rawDate] ?? 0
                 ];
             })
             ->reverse()
