@@ -19,6 +19,7 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
         Route::post('users', [AuthController::class, 'store'])->name('users.create');
         Route::get('users', [AuthController::class, 'index'])->name('users.index');
         Route::put('users/change-password', [AuthController::class, 'changePassword'])->name('users.change-password');
+        Route::get('/users/stats', [AuthController::class, 'userStats'])->name('users.stats');
 
 
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');

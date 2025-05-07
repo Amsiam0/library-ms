@@ -2,13 +2,16 @@
 
 namespace App\Repositories\Api\V1;
 
-use App\Exceptions\UnauthorizedException;
+
+use App\Models\BookLoan;
+use App\Models\Feedback;
 use App\Models\User;
 use App\Traits\Api\V1\PaginationTrait;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthRepository
@@ -40,5 +43,20 @@ class AuthRepository
     {
         $user->update($data);
         return $user->fresh();
+    }
+
+    public function getUserStats()
+    {
+        $bookLoan = BookLoan::where('user_id', Auth::user()->id)->whereIn('status', ['pending', 'approved', 'returned'])->get();
+
+        $data =  [
+            'totalPendingLoan' => $bookLoan->where('status', 'approved')->count(),
+            'totalActiveLoan' => $bookLoan->where('status', 'approved')->count(),
+            'totalReturnedLoan' => $bookLoan->where('status', 'returned')->count(),
+            'totalOverDueLoan' => $bookLoan->where('status', 'approved')->where('due_date', '<', now())->count(),
+            'totalReviewWritten' => Feedback::where('user_id', Auth::user()->id)->count()
+        ];
+
+        return $data;
     }
 }

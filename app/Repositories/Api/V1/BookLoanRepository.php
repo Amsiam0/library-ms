@@ -52,6 +52,7 @@ class BookLoanRepository
         return BookLoan::find($id);
     }
 
+
     public function findWithRelations(string $id): ?BookLoan
     {
         return BookLoan::with(['book.physicalStock'])->find($id);

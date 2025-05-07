@@ -81,4 +81,19 @@ class AuthController extends Controller
             'message' => 'Password changed successfully'
         ], Response::HTTP_OK);
     }
+
+    public function userStats(Request $request): JsonResponse
+    {
+        try {
+            $stats = $this->userRepository->getUserStats();
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getCode() ?? 500);
+        }
+        return response()->json([
+            'message' => 'Stats retrieved successfully',
+            'data' => $stats
+        ], Response::HTTP_OK);
+    }
 }
