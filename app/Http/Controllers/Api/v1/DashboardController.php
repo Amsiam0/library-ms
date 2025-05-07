@@ -4,19 +4,20 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Api\V1\BookRepository;
+use App\Repositories\Api\V1\DashboardRepository;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
     public function __construct(
-        private readonly BookRepository $bookRepository
+        private readonly DashboardRepository $dashboardRepository
     ) {}
 
     public function getAnalytics(): JsonResponse
     {
         try {
-            $stats = $this->bookRepository->getDashboardStats();
+            $stats = $this->dashboardRepository->getDashboardStats();
 
             return response()->json([
                 'message' => 'Dashboard statistics retrieved successfully',
