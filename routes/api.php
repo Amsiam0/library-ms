@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\BookController;
 use App\Http\Controllers\Api\v1\BookLoanController;
 use App\Http\Controllers\Api\v1\CategoryController;
+use App\Http\Controllers\Api\v1\DashboardController;
 use App\Http\Controllers\Api\v1\FeedbackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -45,5 +46,10 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
         Route::get('/feedback/latest', [FeedbackController::class, 'getLatestFeedback']);
         Route::post('/books/{book}/feedback', [FeedbackController::class, 'store']);
         Route::get('/books/{book}/feedback', [FeedbackController::class, 'getBookFeedback']);
+
+        // Dashboard routes middlewared by admin
+        Route::group(['prefix' => 'dashboard', 'middleware' => [AdminMiddleware::class]], function () {
+            Route::get('/', [DashboardController::class, 'getAnalytics']);
+        });
     });
 });
