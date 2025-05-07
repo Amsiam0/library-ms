@@ -33,7 +33,7 @@ class DashboardRepository
 
     private function getTopBorrowedBooks(): array
     {
-        return Book::withCount(['bookLoans' => function($query) {
+        $books = Book::withCount(['bookLoans' => function($query) {
             $query->where('status', 'approved');
         }])
             ->having('book_loans_count', '>', 0)
@@ -46,8 +46,15 @@ class DashboardRepository
                 'author' => $book->author,
                 'thumbnail' => $book->thumbnail,
                 'total_borrows' => $book->book_loans_count
-            ])
-            ->toArray();
+            ]);
+
+        $counts = collect($books)->pluck('total_borrows');
+
+        return [
+            'minCount' => $counts->min(),
+            'maxCount' => $counts->max(),
+            'data' => $books
+        ];
     }
 
     private function getLastSevenDaysStats(): array
@@ -83,7 +90,7 @@ class DashboardRepository
     {
         return collect(range(0, 6))
             ->map(function ($days) use ($lastSevenDays) {
-                $date = now()->subDays($days)->format('Y-m-d');
+                $date = now()->subDays($days)->format('d M');
                 return [
                     'date' => $date,
                     'count' => $lastSevenDays[$date] ?? 0
